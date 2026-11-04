@@ -1,0 +1,81 @@
+openapi: 3.0.3
+info:
+  title: Enterprise E-Commerce API Specifications
+  description: Core architectural interfaces for User Management, Product Catalog, and Checkout paths.
+  version: 1.0.0
+paths:
+  /api/v1/auth/login:
+    post:
+      summary: Authenticate User and Obtain Bearer Token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Authentication Successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: Cryptographic JWT authentication bearer string.
+        '401':
+          description: Unauthorized Access / Invalid Credentials
+
+  /api/v1/products:
+    get:
+      summary: Retrieve Paginated Catalog List
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: A verified list of architectural inventory products.
+
+  /api/v1/orders:
+    post:
+      summary: Place a new processing order
+      security:
+        - BearerAuth:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      product_id:
+                        type: integer
+                      quantity:
+                        type: integer
+      responses:
+        '201':
+          description: Transaction State Initiated Successfully
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
