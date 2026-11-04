@@ -1,110 +1,91 @@
+# E-Commerce Application Solution Architecture
 
-# Enterprise Cloud Infrastructure Architecture
+A comprehensive, end-to-end enterprise solution architecture designed for a scalable, highly available, secure, and reliable multi-tenant E-Commerce platform. This repository documents the structural blueprints, core component designs, data flow workflows, API contracts, and security frameworks tailored to meet stringent business and technical requirements.
 
-## Project Overview
+---
 
-This project demonstrates an enterprise cloud infrastructure
-application built using Python and Flask.
+## 🏗️ System Architecture Overview
 
-It focuses on core cloud infrastructure concepts such as
-application server management, database connectivity,
-file storage, access control, and application monitoring.
+The system is structured using a decoupled, highly cohesive architecture to ensure independent scalability, fault isolation, and seamless component updates.
 
-## Technologies Used
+```text
+                        [ Client Applications ]
+                   (Web App, Mobile App, Admin Portal)
+                                   │
+                                   ▼
+                        [ HTTPS / API Gateway ]
+          (Routing, Rate Limiting, Load Balancing, JWT Auth)
+                                   │
+         ┌─────────────────────────┼─────────────────────────┐
+         ▼                         ▼                         ▼
+┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+│ User Management │       │ Product Catalog │       │  Order & Logic  │
+│     Service     │       │     Service     │       │   Processing    │
+└────────┬────────┘       └────────┬────────┘       └────────┬────────┘
+         │                         │                         │
+         ▼                         ▼                         ▼
+ ┌───────────────┐         ┌───────────────┐         ┌───────────────┐
+ │  PostgreSQL   │         │  PostgreSQL   │         │  PostgreSQL   │
+ │  (User DB)    │         │ (Catalog DB)  │         │  (Order DB)   │
+ └───────────────┘         └───────────────┘         └───────────────┘
+                                                             │
+                                                             ▼
+                                                    ┌─────────────────┐
+                                                    │   Third-Party   │
+                                                    │ Payment Gateway │
+                                                    │ (Stripe/PayPal) │
+                                                    └─────────────────┘
+```
 
-- Python
-- Flask
-- SQLite
-- REST API
-- AWS Architecture Concepts
-- Git and GitHub
+---
 
-## Project Architecture
+## 🛠️ Core Technology Stack
 
-The proposed cloud architecture includes:
+*   **System Design & Methodology:** Domain-Driven Design (DDD), Decoupled Component Architecture, Database-per-Service Strategy.
+*   **Application Communication:** RESTful APIs, JSON Payloads, Synchronous HTTP/HTTPS.
+*   **Database Systems:** Relational SQL (PostgreSQL / MySQL) structured for ACID compliance, transactional integrity, and optimized indexing.
+*   **Cloud Infrastructure:** Cloud-agnostic design ready for AWS, Azure, or GCP hosting using managed load balancers, secure virtual networks, and compute scaling groups.
+*   **Security Framework:** Zero-Trust Model, TLS 1.3 encryption-in-transit, AES-256 encryption-at-rest, OAuth 2.0 / JWT stateless authentication, and Role-Based Access Control (RBAC).
 
-- Application Load Balancer
-- Amazon EC2 for application hosting
-- Amazon RDS for database management
-- Amazon S3 for cloud storage
-- Amazon VPC for network isolation
-- IAM for identity and access management
-- Security Groups for network security
+---
 
-Note: The current implementation runs locally.
-AWS services are part of the proposed deployment architecture.
+## 📦 Major Functional Components
 
-## Features
+### 1. User Management Service
+Handles customer and administrator registration, identity management, authentication profiles, profile persistence, and Role-Based Access Control (RBAC) levels.
 
-1. Application health monitoring
-2. Employee data management
-3. REST API development
-4. API key-based access control
-5. File upload functionality
-6. Application metrics
+### 2. Product Catalog Service
+Manages global product inventory, categorization, attributes, inventory tracking thresholds, and optimized search/retrieval paths.
 
-## Project Structure
+### 3. Order Processing Engine
+Maintains stateful workflows for order creation, pricing calculation engines, cart validation checkout flows, and state machine lifecycle updates (Pending -> Paid -> Shipped -> Delivered).
 
-enterprise-cloud-infrastructure/
-|
-|-- app.py
-|-- requirements.txt
-|-- README.md
-|-- .gitignore
-|-- cloud_storage/
+### 4. Payment Integration Gateway
+An isolated payment processor proxy handling secure tokenized exchanges with external vendors (e.g., Stripe, PayPal), ensuring no sensitive PCI-DSS payload enters the internal database boundaries.
 
-## Installation and Setup
+---
 
-### 1. Clone the repository
+## 🔌 Core API Specifications
 
-git clone https://github.com/YOUR_USERNAME/enterprise-cloud-infrastructure.git
+All system boundaries interact over secure RESTful boundaries utilizing strict standard JSON communication formats.
 
-### 2. Navigate to the project
+### Auth & Users
+*   `POST /api/v1/auth/register` - Registers a new user account profile.
+*   `POST /api/v1/auth/login` - Authenticates credentials and returns a secure JWT bearer token.
 
-cd enterprise-cloud-infrastructure
+### Catalog Engine
+*   `GET /api/v1/products` - Returns a paginated list of catalog items with filtering options.
+*   `GET /api/v1/products/{id}` - Retrieves complete granular details for a distinct catalog entity.
 
-### 3. Create a virtual environment
+### Checkout & Ordering
+*   `POST /api/v1/orders` - Initiates the transaction payload and creates an internal pending order structure.
+*   `GET /api/v1/orders/{id}` - Dynamically tracks processing, shipping, and delivery state tracking.
 
-python -m venv venv
+---
 
-### 4. Activate the environment
+## 🛡️ Non-Functional Security & Performance Requirements
 
-Windows:
-venv\Scripts\activate
-
-### 5. Install dependencies
-
-pip install -r requirements.txt
-
-### 6. Run the application
-
-python app.py
-
-Application URL:
-http://127.0.0.1:5000
-
-## API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| /health | GET | Application health |
-| /employees | POST | Add employee |
-| /employees | GET | Retrieve employees |
-| /upload | POST | Upload files |
-| /metrics | GET | Application metrics |
-
-Protected APIs require the X-API-Key header.
-
-## Future Enhancements
-
-- AWS EC2 deployment
-- Amazon S3 integration
-- Amazon RDS integration
-- Docker containerization
-- Application Load Balancer
-- Auto Scaling
-- CloudWatch monitoring
-
-## Author
-
-Kiranmai Sampangi
+*   **Data Integrity:** Implements database foreign key constraints, explicit transaction boundaries, and isolation levels to prevent race conditions during inventory depletion checks.
+*   **Stateless Scaling:** Computes layer functions free of shared operational state, allowing horizontal scaling behind standard cloud HTTP Load Balancers.
+*   **Tokenized Authorization:** All non-public endpoint boundaries validate signed cryptographic JSON Web Tokens (JWT) extracted from authorization headers.
+*   **Network Perimeter Defenses:** Enforces distinct Subnet separation, keeping database layers nested deeply in strictly private subnets inaccessible directly from the internet.
